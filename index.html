@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>localStorage override</title>
+</head>
+<body>
+    <div id="debug"></div>
+    <script type="text/javascript">
+      const globalStore = {};
+      const localStorageEnabled = window.localStorage && window.localStorage.getItem && typeof(window.localStorage.getItem) === 'function';
+      const debug = document.getElementById('debug');
+      debug.innerHTML += 'localStorage enabled: ' + localStorageEnabled + '<br />';
+      //if (!window.localStorage || (window.localStorage && window.localStorage.getItem && typeof(window.localStorage.getItem) !== 'function')) {
+        //debug.innerHTML += '<br />localStorage is not supported.';
+      console.log('*** storage', Storage);
+
+      window.Storage.prototype.getItem = (key) => {
+        debug.innerHTML += '*** get item, value: ' +  globalStore[key];
+        return globalStore[key];
+        };
+        window.Storage.prototype.setItem = (key, value) => {
+          console.log('*** set item', key, value);
+          debug.innerHTML += '*** set item, key: ' + key + ', value: ' + value;
+          if (typeof(key) === 'string' && typeof(value) === 'string')
+            globalStore[key] = value;
+        };
+        window.Storage.prototype.removeItem = (key) => {
+          console.log('*** remove item', key);
+          debug.innerHTML += '*** remove item, key: ' +  key;
+          if (globalStore[key])
+            delete globalStore[key];
+        };
+      //}
+    </script>
+
+    <script>
+        localStorage.setItem('test', 'test');
+        localStorage.getItem('test');
+        localStorage.removeItem('test');
+        localStorage.getItem('test');
+    </script>
+</body>
+</html>
