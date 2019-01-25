@@ -1,45 +1,94 @@
 <!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>localStorage override</title>
-</head>
-<body>
-    <div id="debug"></div>
-    <script type="text/javascript">
-      const globalStore = {};
-      const localStorageEnabled = window.localStorage && window.localStorage.getItem && typeof(window.localStorage.getItem) === 'function';
-      const debug = document.getElementById('debug');
-      debug.innerHTML += 'localStorage enabled: ' + localStorageEnabled + '<br />';
-      //if (!window.localStorage || (window.localStorage && window.localStorage.getItem && typeof(window.localStorage.getItem) !== 'function')) {
-        //debug.innerHTML += '<br />localStorage is not supported.';
-      console.log('*** storage', Storage);
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8"/>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+        <title>Local Storage Test Site</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-      window.Storage.prototype.getItem = (key) => {
-        debug.innerHTML += '*** get item, value: ' +  globalStore[key];
-        return globalStore[key];
-        };
-        window.Storage.prototype.setItem = (key, value) => {
-          console.log('*** set item', key, value);
-          debug.innerHTML += '*** set item, key: ' + key + ', value: ' + value;
-          if (typeof(key) === 'string' && typeof(value) === 'string')
-            globalStore[key] = value;
-        };
-        window.Storage.prototype.removeItem = (key) => {
-          console.log('*** remove item', key);
-          debug.innerHTML += '*** remove item, key: ' +  key;
-          if (globalStore[key])
-            delete globalStore[key];
-        };
-      //}
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+        </style>
+    </head>
+    <script>
+      const valuesMap = new Map();
+
+      class LocalStorage {
+        getItem (key) {
+          const stringKey = String(key)
+          if (valuesMap.has(key)) {
+            return String(valuesMap.get(stringKey))
+          }
+          return null
+        }
+
+        setItem (key, val) {
+          valuesMap.set(String(key), String(val))
+        }
+
+        removeItem (key) {
+          valuesMap.delete(key)
+        }
+
+        clear () {
+          valuesMap.clear()
+        }
+
+        key (i) {
+          if (arguments.length === 0) {
+            throw new TypeError("Failed to execute 'key' on 'Storage': 1 argument required, but only 0 present.") // this is a TypeError implemented on Chrome, Firefox throws Not enough arguments to Storage.key.
+          }
+          var arr = Array.from(valuesMap.keys())
+          return arr[i]
+        }
+
+        get length () {
+          return valuesMap.size
+        }
+      }
+      const instance = new LocalStorage()
+
+      global.localStorage = new Proxy(instance, {
+        set: function (obj, prop, value) {
+          if (LocalStorage.prototype.hasOwnProperty(prop)) {
+            instance[prop] = value
+          } else {
+            instance.setItem(prop, value)
+          }
+          return true
+        },
+        get: function (target, name) {
+          if (LocalStorage.prototype.hasOwnProperty(name)) {
+            return instance[name]
+          }
+          if (valuesMap.has(name)) {
+            return instance.getItem(name)
+          }
+        }
+      });
     </script>
 
     <script>
-        localStorage.setItem('test', 'test');
-        localStorage.getItem('test');
-        localStorage.removeItem('test');
-        localStorage.getItem('test');
+        const debug = document.getElementById('debug');
+        const addDebugMsg = (str) => {
+          debug.insertAdjacentHTML('afterbegin', str);
+        };
+        window.onerror = function(message, source, line, col) {
+          addDebugMsg(message + ' ' + source + ' ' + line + ' ' + col);
+        };
     </script>
-</body>
+    <body>
+        <h3>Local Storage Test</h3>
+        <div id="debug" />
+
+        <script type="application/javascript">
+            localStorage.setItem('test', 'test value');
+            const test = localStorage.getItem('test');
+            addDebugMsg('Local Storage value: ' + test);
+            debug.insertAdjacentHTML('', 'Local Storage value: ' + test);
+            localStorage.removeItem('test');
+        </script>
+    </body>
 </html>
