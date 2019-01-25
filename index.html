@@ -50,7 +50,7 @@
       }
       const instance = new LocalStorage()
 
-      global.localStorage = new Proxy(instance, {
+      localStorage = new Proxy(instance, {
         set: function (obj, prop, value) {
           if (LocalStorage.prototype.hasOwnProperty(prop)) {
             instance[prop] = value
@@ -70,24 +70,24 @@
       });
     </script>
 
-    <script>
-        const debug = document.getElementById('debug');
-        const addDebugMsg = (str) => {
-          debug.insertAdjacentHTML('afterbegin', str);
-        };
-        window.onerror = function(message, source, line, col) {
-          addDebugMsg(message + ' ' + source + ' ' + line + ' ' + col);
-        };
-    </script>
     <body>
         <h3>Local Storage Test</h3>
         <div id="debug" />
+
+        <script>
+          const debug = document.getElementById('debug');
+          const addDebugMsg = (str) => {
+            debug.insertAdjacentHTML('afterbegin', str + '<br />');
+          };
+          window.onerror = function(message, source, line, col) {
+            addDebugMsg(message + ' ' + source + ' ' + line + ' ' + col);
+          };
+        </script>
 
         <script type="application/javascript">
             localStorage.setItem('test', 'test value');
             const test = localStorage.getItem('test');
             addDebugMsg('Local Storage value: ' + test);
-            debug.insertAdjacentHTML('', 'Local Storage value: ' + test);
             localStorage.removeItem('test');
         </script>
     </body>
